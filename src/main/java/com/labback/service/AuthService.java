@@ -4,7 +4,7 @@ import com.labback.dto.LoginRequest;
 import com.labback.dto.LoginResponse;
 import com.labback.dto.RegisterRequest;
 import com.labback.exception.UserAlreadyExistsException;
-import com.labback.model.Users;
+import com.labback.model.User;
 import com.labback.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -46,7 +46,7 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         // 3. Buscar al usuario en la DB para obtener sus datos y generar el token
-        Users user = userRepository.findByUsername(loginRequest.getUsername())
+        User user = userRepository.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> new RuntimeException("Error: Usuario no encontrado tras autenticación."));
 
         // 4. Generar el String del JWT
@@ -68,7 +68,7 @@ public class AuthService {
         }
 
         // 2. Mapear el DTO a la Entidad (Convertir LoginRequest -> Users)
-        Users nuevoUsuario = new Users();
+        User nuevoUsuario = new User();
         nuevoUsuario.setUsername(registro.getUsername());
 
         // 3. Encriptar la contraseña
@@ -76,7 +76,7 @@ public class AuthService {
         nuevoUsuario.setPassword(encodedPassword);
 
         // 4. Guardar la ENTIDAD en PostgreSQL
-        Users savedUser = userRepository.save(nuevoUsuario);
+        User savedUser = userRepository.save(nuevoUsuario);
 
         // 5. Generar token
         String token = jwtTokenService.generateToken(savedUser);

@@ -1,6 +1,6 @@
 package com.labback.service;
 
-import com.labback.model.Users;
+import com.labback.model.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +25,7 @@ public class JwtTokenService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(Users user) {
+    public String generateToken(User user) {
         return Jwts.builder()
                 .setSubject(user.getUsername())
                 .claim("roles", Collections.singletonList("ROLE_USER"))
