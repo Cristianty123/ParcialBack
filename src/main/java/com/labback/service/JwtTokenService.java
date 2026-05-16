@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.Collections;
 
 @Service
 public class JwtTokenService {
@@ -25,10 +24,15 @@ public class JwtTokenService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    /**
+     * Genera un JWT que incluye:
+     * - subject: username (para cargar el UserDetails en el filtro)
+     * - claim "role": el enum Role como String (para que Flutter lo lea sin decodificar)
+     */
     public String generateToken(User user) {
         return Jwts.builder()
                 .setSubject(user.getUsername())
-                .claim("roles", Collections.singletonList("ROLE_USER"))
+                .claim("role", user.getRole().name())   // "CLIENT" o "ENTREPRENEUR"
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)
@@ -43,6 +47,7 @@ public class JwtTokenService {
                 .getBody()
                 .getSubject();
     }
+
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()

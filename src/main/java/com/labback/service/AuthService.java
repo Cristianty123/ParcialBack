@@ -19,7 +19,6 @@ public class AuthService {
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenService jwtTokenService;
-
     private final PasswordEncoder passwordEncoder;
 
     public AuthService(UserRepository userRepository,
@@ -32,9 +31,15 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Autentica un usuario existente.
+     * Delega la validación de credenciales a Spring Security (AuthenticationManager),
+     * que internamente usa CustomUserDetailService + BCrypt.
+     * Si las credenciales son incorrectas, AuthenticationManager lanza una excepción
+     * que el AuthController captura y convierte en 401.
+     */
     public LoginResponse authenticateUser(LoginRequest loginRequest) {
-        // 1. Delegar la validación al AuthenticationManager
-        // Esto lanzará una excepción automáticamente si las credenciales fallan
+        // 1. Validar credenciales (lanza excepción si falla)
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
@@ -42,48 +47,52 @@ public class AuthService {
                 )
         );
 
-        // 2. Establecer la autenticación en el contexto de Spring
+        // 2. Establecer autenticación en el contexto de Spring Security
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // 3. Buscar al usuario en la DB para obtener sus datos y generar el token
+        // 3. Buscar usuario en BD para obtener el rol y generar el token
         User user = userRepository.findByUsername(loginRequest.getUsername())
-                .orElseThrow(() -> new RuntimeException("Error: Usuario no encontrado tras autenticación."));
+                .orElseThrow(() -> new RuntimeException("Error interno: usuario no encontrado tras autenticación."));
 
-        // 4. Generar el String del JWT
+        // 4. Generar JWT (el rol se incluye como claim dentro del token)
         String token = jwtTokenService.generateToken(user);
 
-        // 5. Retornar el DTO con el token y el nombre para el móvil
         return LoginResponse.builder()
                 .token(token)
                 .username(user.getUsername())
+                .role(user.getRole())     // Flutter necesita el rol para navegar al home correcto
                 .message("Login exitoso")
                 .success(true)
                 .build();
     }
 
-    public LoginResponse register(RegisterRequest registro) {
-        // 1. Verificar si el usuario ya existe
-        if (userRepository.findByUsername(registro.getUsername()).isPresent()) {
-            throw new UserAlreadyExistsException("El nombre de usuario ya está en uso");
+    /**
+     * Registra un nuevo usuario con el rol indicado.
+     * Lanza UserAlreadyExistsException si el username ya existe.
+     */
+    public LoginResponse register(RegisterRequest request) {
+        // 1. Verificar unicidad del username
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new UserAlreadyExistsException("El nombre de usuario '" + request.getUsername() + "' ya está en uso");
         }
 
-        // 2. Mapear el DTO a la Entidad (Convertir LoginRequest -> Users)
-        User nuevoUsuario = new User();
-        nuevoUsuario.setUsername(registro.getUsername());
+        // 2. Construir la entidad con el rol recibido del cliente
+        User nuevoUsuario = User.builder()
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(request.getRole())   // CLIENT o ENTREPRENEUR
+                .build();
 
-        // 3. Encriptar la contraseña
-        String encodedPassword = passwordEncoder.encode(registro.getPassword());
-        nuevoUsuario.setPassword(encodedPassword);
-
-        // 4. Guardar la ENTIDAD en PostgreSQL
+        // 3. Persistir
         User savedUser = userRepository.save(nuevoUsuario);
 
-        // 5. Generar token
+        // 4. Generar token y devolver respuesta lista para que Flutter almacene la sesión
         String token = jwtTokenService.generateToken(savedUser);
 
         return LoginResponse.builder()
                 .token(token)
                 .username(savedUser.getUsername())
+                .role(savedUser.getRole())
                 .success(true)
                 .message("Usuario registrado exitosamente")
                 .build();

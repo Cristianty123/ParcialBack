@@ -1,9 +1,11 @@
 package com.labback.dto;
 
+import com.labback.enums.Role;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Builder;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -11,6 +13,7 @@ import lombok.Builder;
 public class LoginResponse {
     private String token;
     private String username;
+    private Role role;     
     private String message;
     private boolean success;
 }
