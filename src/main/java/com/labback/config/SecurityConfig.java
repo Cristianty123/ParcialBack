@@ -41,6 +41,7 @@ public class SecurityConfig {
                     .authorizeHttpRequests(auth -> {
                         auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
                         auth.requestMatchers("/authenticate/**").permitAll();
+                        auth.requestMatchers("/health").permitAll(); // <--- AGREGA ESTA LÍNEA
                         auth.anyRequest().authenticated();
                     })
                     .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
