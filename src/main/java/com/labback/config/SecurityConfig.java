@@ -5,6 +5,7 @@ import com.labback.service.JwtTokenService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity; // <-- IMPORT AGREGADO
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -21,6 +22,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtTokenService jwtTokenService;
@@ -41,6 +43,9 @@ public class SecurityConfig {
                     .authorizeHttpRequests(auth -> {
                         auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
                         auth.requestMatchers("/authenticate/**").permitAll();
+                        auth.requestMatchers("/health").permitAll();
+                        auth.requestMatchers(HttpMethod.GET, "/categories").permitAll();
+                        auth.requestMatchers(HttpMethod.GET, "/images/**").permitAll();
                         auth.anyRequest().authenticated();
                     })
                     .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
