@@ -53,28 +53,28 @@ public interface ServicePostRepository extends JpaRepository<ServicePost, Intege
 
     @Query(
             value = """
-                SELECT DISTINCT s FROM ServicePost s
-                JOIN FETCH s.category
-                JOIN FETCH s.entrepreneur
-                LEFT JOIN FETCH s.images
-                WHERE s.status = com.labback.enums.ServiceStatus.ACTIVE
-                  AND (:categoryId IS NULL OR s.category.id = :categoryId)
-                  AND (
-                        :keyword IS NULL
-                        OR LOWER(s.title)       LIKE LOWER(CONCAT('%', :keyword, '%'))
-                        OR LOWER(s.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                      )
-                """,
+        SELECT DISTINCT s FROM ServicePost s
+        JOIN FETCH s.category
+        JOIN FETCH s.entrepreneur
+        LEFT JOIN FETCH s.images
+        WHERE s.status = com.labback.enums.ServiceStatus.ACTIVE
+          AND (:categoryId IS NULL OR s.category.id = :categoryId)
+          AND (
+                CAST(:keyword AS string) IS NULL
+                OR LOWER(s.title)       LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%'))
+                OR LOWER(s.description) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%'))
+              )
+        """,
             countQuery = """
-                SELECT COUNT(DISTINCT s) FROM ServicePost s
-                WHERE s.status = com.labback.enums.ServiceStatus.ACTIVE
-                  AND (:categoryId IS NULL OR s.category.id = :categoryId)
-                  AND (
-                        :keyword IS NULL
-                        OR LOWER(s.title)       LIKE LOWER(CONCAT('%', :keyword, '%'))
-                        OR LOWER(s.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                      )
-                """
+        SELECT COUNT(DISTINCT s) FROM ServicePost s
+        WHERE s.status = com.labback.enums.ServiceStatus.ACTIVE
+          AND (:categoryId IS NULL OR s.category.id = :categoryId)
+          AND (
+                CAST(:keyword AS string) IS NULL
+                OR LOWER(s.title)       LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%'))
+                OR LOWER(s.description) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%'))
+              )
+        """
     )
     Page<ServicePost> searchActive(
             @Param("categoryId") Integer categoryId,

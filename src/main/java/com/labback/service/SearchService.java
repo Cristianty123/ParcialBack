@@ -127,13 +127,14 @@ public class SearchService {
 
     /**
      * Construye el DTO de card para el home (HU-13).
-     * thumbnail = primera imagen si existe, null si no tiene imágenes.
      * entrepreneurRating = promedio de calificaciones del emprendedor.
      */
     private ServiceCardResponse toCardResponse(ServicePost sp) {
-        String thumbnail = sp.getImages().isEmpty()
-                ? null
-                : sp.getImages().get(0).getImageUrl();
+        List<String> urls = sp.getImages().stream()
+                .map(img -> img.getImageUrl())
+                .collect(Collectors.toList());
+
+        String thumbnail = urls.isEmpty() ? null : urls.get(0);
 
         Double avgRating = reviewRepository
                 .findAverageRatingByEntrepreneurId(sp.getEntrepreneur().getId());
@@ -150,6 +151,9 @@ public class SearchService {
                         .build())
                 .price(sp.getPrice())
                 .thumbnail(thumbnail)
+                .imageUrls(urls)
+                .status(sp.getStatus().name())
+                .createdAt(sp.getCreatedAt())
                 .entrepreneurRating(rounded)
                 .entrepreneurName(sp.getEntrepreneur().getFullName())
                 .build();

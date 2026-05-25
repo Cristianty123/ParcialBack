@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * HU-13 CA-4: datos que Flutter necesita para renderizar cada card del home.
@@ -21,7 +23,10 @@ public class ServiceCardResponse {
     private String       title;
     private CategoryDto  category;
     private BigDecimal   price;
-    private String       thumbnail;        // primera imageUrl, o null
+    private String       thumbnail;
+    private List<String> imageUrls;      // ← agregar
+    private String       status;         // ← agregar
+    private LocalDateTime createdAt;     // ← agregar
     private Double       entrepreneurRating;
     private String       entrepreneurName;
 }
